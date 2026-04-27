@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 
-const BASE_URL = 'https://app.-dev.foundershub.ai';
+const BASE_URL = 'https://app-dev.foundershub.ai';
 
 const CREDENTIALS = {
   email: 'info@foundershub.ai',
