@@ -104,7 +104,7 @@ test.describe('Leorix — Dashboard', () => {
     }
 
     expect(found).toBe(true);
-    console.log('✅ LUM-03 passed: Logged-in user visible in User Management');
+    console.log('✅ LUM-03 passed: Logged-in user visible in user management');
   });
 });
 
