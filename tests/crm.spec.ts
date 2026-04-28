@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 
-const BASE_URL = 'https://app.leorix.com';
+const BASE_URL = 'https://app-dev.foundershub.ai';
 const CRM_URL = `${BASE_URL}/modules?type=crm`;
 
 const CREDENTIALS = {
