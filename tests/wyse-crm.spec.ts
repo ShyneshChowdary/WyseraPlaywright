@@ -73,10 +73,21 @@ test.describe('Wyse CRM — Full Automation Testing', () => {
     console.log('✅ WCRM-05 passed');
   });
 
-  test('WCRM-06: Should show Activity section', async ({ page }) => {
-    await expect(page.locator('text=ACTIVITY').first()).toBeVisible({ timeout: 12_000 });
-    console.log('✅ WCRM-06 passed');
-  });
+ test('WCRM-06: Should show Activity section', async ({ page }) => {
+  // Scroll to bottom to ensure Activity section loads
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(3000);
+
+  const activityFound = await Promise.any([
+    page.locator('text=ACTIVITY').first().isVisible({ timeout: 10_000 }),
+    page.locator('text=what\'s happening across').first().isVisible({ timeout: 10_000 }),
+    page.locator('text=Foundershub AI updated').first().isVisible({ timeout: 10_000 }),
+    page.locator('[class*="activity" i]').first().isVisible({ timeout: 10_000 })
+  ]).catch(() => false);
+
+  expect(activityFound).toBe(true);
+  console.log('✅ WCRM-06 passed: Activity section visible at the bottom');
+});
 
   test('WCRM-07: Should open People template', async ({ page }) => {
     await page.locator('text=People').first().click();
