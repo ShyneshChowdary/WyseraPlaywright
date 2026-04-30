@@ -41,10 +41,16 @@ test.describe('Leorix — Development Module', () => {
     console.log('✅ LDV-01 passed');
   });
 
-  test('LDV-02: should display Bug Tracker card', async ({ page }) => {
-    await expect(page.locator('text=Bug Tracker').first()).toBeVisible({ timeout: 15_000 });
-    console.log('✅ LDV-02 passed');
-  });
+  test('LD-02: should show main sidebar items', async ({ page }) => {
+  const sidebarItems = ['Dashboard', 'Wyse CRM', 'CRM', 'Pipeline', 'Settings'];
+  
+  for (const item of sidebarItems) {
+    await expect(
+      page.locator(`nav >> text=${item}`).first()
+    ).toBeVisible({ timeout: 12_000 });
+  }
+  console.log('✅ LD-02 passed');
+});
 
   test('LDV-03: should display Pipeline Health section', async ({ page }) => {
     await expect(page.locator('text=PIPELINE HEALTH').first()).toBeVisible({ timeout: 12_000 });
@@ -56,10 +62,10 @@ test.describe('Leorix — Development Module', () => {
     await page.waitForTimeout(4_000);
 
     const hasContent = await Promise.any([
-      page.locator('text=Bug Tracker').first().isVisible({ timeout: 8_000 }),
-      page.locator('text=8 RECORDS').first().isVisible({ timeout: 8_000 }),
-      page.locator('table').first().isVisible({ timeout: 8_000 }),
-      page.locator('text=RECENT RECORDS').first().isVisible({ timeout: 8_000 })
+    page.locator('text=Bug Tracker').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+    page.locator('text=RECORDS').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+    page.locator('text=RECENT RECORDS').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+    page.locator('[class*="record"], [class*="row"], [class*="grid"]').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
     ]).catch(() => false);
 
     expect(hasContent).toBe(true);

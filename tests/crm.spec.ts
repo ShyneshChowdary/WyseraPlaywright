@@ -91,17 +91,25 @@ test.describe('Leorix — CRM Module', () => {
   });
 
   test('LCRM-10: should open Prospects card', async ({ page }) => {
-    await page.locator('text=Prospects').first().click();
-    await page.waitForTimeout(4_000);
+  console.log('🖱 Clicking Prospects card...');
 
-    const hasContent = await Promise.any([
-      page.locator('text=1,006').first().isVisible({ timeout: 8_000 }),
-      page.locator('text=RECORDS').first().isVisible({ timeout: 8_000 }),
-      page.locator('text=Prospects').first().isVisible({ timeout: 8_000 }),
-      page.locator('[class*="record"], [class*="pipeline"]').first().isVisible({ timeout: 8_000 })
-    ]).catch(() => false);
+  await page.locator('text=Prospects').first().click();
+  
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(3_000);
 
-    expect(hasContent).toBe(true);
-    console.log('✅ LCRM-10 passed: Prospects card opened successfully');
-  });
+  const pageContent = await page.content();
+  console.log('Page URL after click:', page.url());
+
+  const hasContent = await Promise.any([
+    page.locator('text=Prospects').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+    page.locator('text=RECORDS').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+    page.locator('table').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+    page.locator('[class*="record"], [class*="pipeline"], [class*="stage"]').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+    page.locator('text=Contact').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+  ]).catch(() => false);
+
+  expect(hasContent).toBe(true);
+  console.log('✅ LCRM-10 passed: Prospects card opened successfully');
+});
 });

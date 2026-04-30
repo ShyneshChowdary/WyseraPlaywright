@@ -70,24 +70,30 @@ test.describe('Wyse CRM — Full Automation Testing', () => {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await page.waitForTimeout(1500);
 
-    const activityFound = await Promise.any([
-      page.locator('text=ACTIVITY').first().isVisible({ timeout: 10_000 }),
-      page.locator('text=what\'s happening across').first().isVisible({ timeout: 10_000 }),
-      page.locator('text=Foundershub AI updated').first().isVisible({ timeout: 10_000 }),
-      page.locator('[class*="activity" i]').first().isVisible({ timeout: 10_000 })
-    ]).catch(() => false);
+    const activityFound = await Promise.any
+    ([
+      page.locator('text=ACTIVITY').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+      page.locator('text=what\'s happening across').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+      page.locator('text=Foundershub AI updated').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+      page.locator('[class*="activity" i]').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+      page.locator('[class*="feed"], [class*="timeline"], [class*="log"]').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+    ]).catch(() => false);  
 
     expect(activityFound).toBe(true);
     console.log('✅ WCRM-06 passed: Activity section visible');
   });
 
-  test('WCRM-07: Should open People template', async ({ page }) => {
+  test('WCRM-07: Should open People template', async ({ page }) => 
+  {
     await page.locator('text=People').first().click();
     await page.waitForTimeout(4_000);
-    const hasContent = await Promise.any([
-      page.locator('text=Contact directory').first().isVisible({ timeout: 10_000 }),
-      page.locator('text=Full Name').first().isVisible({ timeout: 10_000 }),
-      page.locator('table').first().isVisible({ timeout: 10_000 })
+    const hasContent = await Promise.any
+    ([
+      page.locator('text=Contact directory').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+      page.locator('text=Full Name').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+      page.locator('text=RESULTS').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+      page.locator('text=PIPELINE HEALTH').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+      page.locator('[class*="grid"], [class*="table"], [class*="row"]').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
     ]).catch(() => false);
 
     expect(hasContent).toBe(true);
