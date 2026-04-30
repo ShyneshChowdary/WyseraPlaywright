@@ -91,7 +91,7 @@ test.describe('Leorix — CRM Module', () => {
   });
 
   test('LCRM-10: should open Prospects card', async ({ page }) => {
-  console.log('🖱 Clicking Prospects card...');
+  console.log('Clicking Prospects card...');
 
   await page.locator('text=Prospects').first().click();
   

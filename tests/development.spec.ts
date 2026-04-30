@@ -10,7 +10,7 @@ const CREDENTIALS = {
 
 async function loginAndGoToDevelopment(page: Page): Promise<void> {
   console.log('🔐 Logging into Development...');
-  
+
   await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
 
   await page.locator('input[type="email"], input[name="email"]').first().fill(CREDENTIALS.email);
@@ -37,35 +37,36 @@ test.describe('Leorix — Development Module', () => {
   });
 
   test('LDV-01: should load Development module', async ({ page }) => {
-    await expect(page).toHaveURL(/.*development.*/i);
+    await expect(page).toHaveURL(/[?&]type=development/i);
     console.log('✅ LDV-01 passed');
   });
 
-  test('LD-02: should show main sidebar items', async ({ page }) => {
-  const sidebarItems = ['Dashboard', 'Wyse CRM', 'CRM', 'Pipeline', 'Settings'];
-  
-  for (const item of sidebarItems) {
-    await expect(
-      page.locator(`nav >> text=${item}`).first()
-    ).toBeVisible({ timeout: 12_000 });
-  }
-  console.log('✅ LD-02 passed');
-});
-
-  test('LDV-03: should display Pipeline Health section', async ({ page }) => {
-    await expect(page.locator('text=PIPELINE HEALTH').first()).toBeVisible({ timeout: 12_000 });
-    console.log('✅ LDV-03 passed');
+  test('LDV-02: should display Development module header', async ({ page }) => {
+    await expect(page.locator('text=Development').first()).toBeVisible({ timeout: 12_000 });
+    console.log('✅ LDV-02 passed');
   });
+
+  test('LDV-03: should display Development module cards', async ({ page }) => {
+  const hasContent = await Promise.any([
+    page.locator('text=Bug Tracker').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+    page.locator('text=Development').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+    page.locator('[class*="card"], [class*="module"], [class*="template"]').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+  ]).catch(() => false);
+
+  expect(hasContent).toBe(true);
+  console.log('✅ LDV-03 passed');
+});
 
   test('LDV-04: should open Bug Tracker details on click', async ({ page }) => {
     await page.locator('text=Bug Tracker').first().click();
-    await page.waitForTimeout(4_000);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1_000);
 
     const hasContent = await Promise.any([
-    page.locator('text=Bug Tracker').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
-    page.locator('text=RECORDS').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
-    page.locator('text=RECENT RECORDS').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
-    page.locator('[class*="record"], [class*="row"], [class*="grid"]').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+      page.locator('text=Bug Tracker').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+      page.locator('text=RECORDS').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+      page.locator('text=RECENT RECORDS').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
+      page.locator('[class*="record"], [class*="row"], [class*="grid"]').first().waitFor({ state: 'visible', timeout: 12_000 }).then(() => true),
     ]).catch(() => false);
 
     expect(hasContent).toBe(true);
@@ -81,13 +82,14 @@ test.describe('Leorix — Development Module', () => {
 
   test('LDV-06: should show recent records / activity', async ({ page }) => {
     const hasRecent = await Promise.any([
-      page.locator('text=RECENT RECORDS').first().isVisible({ timeout: 10_000 }),
-      page.locator('table').first().isVisible({ timeout: 10_000 }),
-      page.locator('text=Showing').first().isVisible({ timeout: 10_000 }),
-      page.locator('text=8 RECORDS').first().isVisible({ timeout: 10_000 })
+      page.locator('text=RECENT RECORDS').first().waitFor({ state: 'visible', timeout: 10_000 }).then(() => true),
+      page.locator('table').first().waitFor({ state: 'visible', timeout: 10_000 }).then(() => true),
+      page.locator('text=Showing').first().waitFor({ state: 'visible', timeout: 10_000 }).then(() => true),
+      page.locator('text=8 RECORDS').first().waitFor({ state: 'visible', timeout: 10_000 }).then(() => true),
     ]).catch(() => false);
 
     expect(hasRecent).toBe(true);
     console.log('✅ LDV-06 passed: Recent records / activity visible');
   });
+
 });

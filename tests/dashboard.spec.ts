@@ -45,12 +45,15 @@ test.describe('Leorix — Dashboard', () => {
   });
 
   test('LD-02: should show main sidebar items', async ({ page }) => {
-    const items = ['CRM', 'Development', 'Asset', 'Project', 'Generic', 'Inventory', 'Pipeline'];
-    for (const item of items) {
-      await expect(page.locator(`text=${item}`).first()).toBeVisible({ timeout: 12_000 });
-    }
-    console.log('✅ LD-02 passed');
-  });
+  const sidebarItems = ['Dashboard', 'Wyse CRM', 'CRM', 'Pipeline', 'Settings'];
+
+  for (const item of sidebarItems) {
+    await expect(
+      page.locator('nav').locator(`text=${item}`).first()
+    ).toBeVisible({ timeout: 12_000 });
+  }
+  console.log('✅ LD-02 passed');
+});
 
   test('LD-03: should show Template Performance / Charts', async ({ page }) => {
     await expect(page.locator('text=What\'s landing and what\'s not').first()).toBeVisible({ timeout: 15_000 });
