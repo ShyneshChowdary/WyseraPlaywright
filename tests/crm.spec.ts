@@ -97,7 +97,7 @@ test.describe('Leorix — CRM Module', () => {
   
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(3_000);
-
+npx 
   const pageContent = await page.content();
   console.log('Page URL after click:', page.url());
 
