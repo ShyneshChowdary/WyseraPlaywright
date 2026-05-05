@@ -74,7 +74,7 @@ test.describe('Wyse CRM — Full Automation Testing', () => {
     console.log('✅ WCRM-04 passed');
   });
 
-  test('WCRM-05: Should display Pipeline Health', async ({ page }) => {
+    test('WCRM-05: Should display Pipeline Health', async ({ page }) => {
     await expect(page.locator('text=HEALTHY').first()).toBeVisible({ timeout: 12_000 });
     console.log('✅ WCRM-05 passed');
   });
