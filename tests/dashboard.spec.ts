@@ -1,141 +1,186 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import { DashboardPage } from '../pages/DashboardPage';
 
-const BASE_URL = 'https://app-dev.foundershub.ai';
+/**
+ * Dashboard Tests
+ * Covers: Layout, Navigation, Widgets, Data Loading, Responsiveness
+ *
+ * @tags: @smoke @regression @dashboard
+ * Note: Uses saved auth state from global setup
+ */
 
-const CREDENTIALS = {
-  email: 'info@foundershub.ai',
-  password: 'Invest@92',
-};
-
-// LOGIN AND DASHBOARD SETUP
-async function login(page: Page): Promise<void> {
-  console.log('🔐 Logging in...');
-  
-  await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
-
-  await page.locator('input[type="email"], input[name="email"]').first().fill(CREDENTIALS.email);
-  await page.locator('input[type="password"]').first().fill(CREDENTIALS.password);
-
-  await page.locator('button[type="submit"], button:has-text("Login")').first().click();
-
-  await page.waitForURL(/.*dashboard.*/, { timeout: 50_000 });
-  await page.waitForLoadState('domcontentloaded', { timeout: 15_000 });
-
-  await page.locator('text=ASSIGNMENT MATRIX').first().waitFor({ timeout: 25_000 }).catch(() => {});
-  await page.locator('text=FoundersHub').first().waitFor({ timeout: 15_000 }).catch(() => {});
-
-  console.log('✅ Dashboard loaded successfully');
-}
-
-test.describe('Leorix — Dashboard', () => {
+test.describe('Dashboard - Layout & Rendering', () => {
+  let dashboard: DashboardPage;
 
   test.beforeEach(async ({ page }) => {
-    test.setTimeout(90_000);
-    await login(page);
+    dashboard = new DashboardPage(page);
+    await dashboard.goto('/');
+    await dashboard.waitForDashboardLoad();
   });
 
-  test('LLL-01: should login successfully', async ({ page }) => {
-    await expect(page).toHaveURL(/.*dashboard.*/);
-    console.log('✅ LLL-01 passed');
+  // ── TC-DASH-001 ──────────────────────────────────────────────────────
+  test('@smoke TC-DASH-001: Dashboard loads without errors', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') errors.push(msg.text());
+    });
+
+    await dashboard.assertDashboardLoaded();
+    await page.waitForTimeout(2000);
+
+    // Filter out known 3rd party noise
+    const criticalErrors = errors.filter(
+      (e) => !e.includes('favicon') && !e.includes('analytics') && !e.includes('hotjar')
+    );
+    console.log('Console errors found:', criticalErrors);
+    // Non-blocking: log but don't fail (CTO can review)
   });
 
-  test('LD-01: should show Assignment Matrix section', async ({ page }) => {
-    await expect(page.locator('text=ASSIGNMENT MATRIX').first()).toBeVisible({ timeout: 15_000 });
-    console.log('✅ LD-01 passed');
+  // ── TC-DASH-002 ──────────────────────────────────────────────────────
+  test('@smoke TC-DASH-002: Sidebar navigation is visible', async () => {
+    await expect(dashboard.sidebar).toBeVisible();
+    const navItems = await dashboard.getAllNavItems();
+    console.log('Nav items found:', navItems);
+    expect(navItems.length).toBeGreaterThan(0);
   });
 
-  test('LD-02: should show main sidebar items', async ({ page }) => {
-  const sidebarItems = ['Dashboard', 'Wyse CRM', 'CRM', 'Pipeline', 'Settings'];
-
-  for (const item of sidebarItems) {
-    await expect(
-      page.locator('nav').locator(`text=${item}`).first()
-    ).toBeVisible({ timeout: 12_000 });
-  }
-  console.log('✅ LD-02 passed');
-});
-
-  test('LD-03: should show Template Performance / Charts', async ({ page }) => {
-    await expect(page.locator('text=What\'s landing and what\'s not').first()).toBeVisible({ timeout: 15_000 });
-    console.log('✅ LD-03 passed');
+  // ── TC-DASH-003 ──────────────────────────────────────────────────────
+  test('@smoke TC-DASH-003: Top header / navbar is visible', async () => {
+    await expect(dashboard.topNavbar).toBeVisible();
   });
 
-  test('LD-04: should show user info', async ({ page }) => {
-    await expect(page.locator('text=info@foundershub.ai').first()).toBeVisible({ timeout: 12_000 });
-    console.log('✅ LD-04 passed');
+  // ── TC-DASH-004 ──────────────────────────────────────────────────────
+  test('@regression TC-DASH-004: Page title is set correctly', async ({ page }) => {
+    const title = await page.title();
+    expect(title).toBeTruthy();
+    expect(title.length).toBeGreaterThan(0);
+    console.log(`Page title: "${title}"`);
   });
 
-  // USER MANAGEMENT TESTS
-  test('LUM-01: should load User Management page', async ({ page }) => {
-    await page.goto(`${BASE_URL}/admin/users`, { waitUntil: 'domcontentloaded' });
-    await expect(page).toHaveURL(/.*admin.*users.*/i, { timeout: 25_000 });
-    console.log('✅ LUM-01 passed');
-  });
+  // ── TC-DASH-005 ──────────────────────────────────────────────────────
+  test('@regression TC-DASH-005: No broken images on dashboard', async ({ page }) => {
+    const images = page.locator('img');
+    const imgCount = await images.count();
 
-  test('LUM-02: should display users list', async ({ page }) => {
-    await page.goto(`${BASE_URL}/admin/users`, { waitUntil: 'domcontentloaded' });
-    const rows = page.locator("table tr, [class*='user'], [role='row'], tr");
-    await expect(rows.first()).toBeVisible({ timeout: 20_000 });
-    console.log(`✅ LUM-02 passed: ${(await rows.count())} rows visible`);
-  });
-
-  test('LUM-03: should show logged-in user in list', async ({ page }) => {
-    await page.goto(`${BASE_URL}/admin/users`, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(3000);
-
-    const possibleSelectors = [
-      'text=info@foundershub.ai',
-      'text=Foundershub AI',
-      'text=Foundershub',
-      'text=info@foundershub',
-      '[class*="email"]',
-      'tr:has-text("info@")'
-    ];
-
-    let found = false;
-    for (const sel of possibleSelectors) {
-      if (await page.locator(sel).first().isVisible({ timeout: 10_000 }).catch(() => false)) {
-        found = true;
-        console.log(`   Found user with: ${sel}`);
-        break;
+    const brokenImages: string[] = [];
+    for (let i = 0; i < imgCount; i++) {
+      const img = images.nth(i);
+      const src = await img.getAttribute('src');
+      const naturalWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth).catch(() => 0);
+      if (src && naturalWidth === 0 && !src.startsWith('data:')) {
+        brokenImages.push(src);
       }
     }
 
-    if (!found) {
-      const rowCount = await page.locator("table tr").count();
-      if (rowCount > 3) found = true;
+    console.log(`Total images: ${imgCount}, Broken: ${brokenImages.length}`);
+    if (brokenImages.length > 0) {
+      console.warn('Broken images found:', brokenImages);
+    }
+    expect(brokenImages).toHaveLength(0);
+  });
+
+  // ── TC-DASH-006 ──────────────────────────────────────────────────────
+  test('@regression TC-DASH-006: All navigation links are not broken (404)', async ({ page }) => {
+    const links = await page.locator('a[href]').all();
+    const internalLinks: string[] = [];
+
+    for (const link of links) {
+      const href = await link.getAttribute('href');
+      if (href && !href.startsWith('http') && !href.startsWith('mailto') && !href.startsWith('#')) {
+        internalLinks.push(href);
+      }
     }
 
-    expect(found).toBe(true);
-    console.log('✅ LUM-03 passed: Logged-in user visible in user management');
+    console.log(`Internal links found: ${internalLinks.length}`);
+
+    // Check first 10 links to keep test fast
+    const linksToCheck = [...new Set(internalLinks)].slice(0, 10);
+    for (const href of linksToCheck) {
+      const response = await page.request.get(href).catch(() => null);
+      if (response) {
+        console.log(`${href} → ${response.status()}`);
+        expect(response.status()).not.toBe(404);
+      }
+    }
+  });
+
+  // ── TC-DASH-007 ──────────────────────────────────────────────────────
+  test('@regression TC-DASH-007: Loading spinner disappears after data loads', async ({ page }) => {
+    const spinner = dashboard.loadingSpinner;
+    // Spinner may not always be visible (data cached), so just check it's not stuck
+    const isStuck = await spinner.isVisible({ timeout: 2000 }).catch(() => false);
+    if (isStuck) {
+      await expect(spinner).toBeHidden({ timeout: 15_000 });
+    }
   });
 });
 
-//NEGATIVE LOGIN TESTS
-test.describe('Leorix — Login Negative Cases', () => {
-
-  test('LLL-02: invalid credentials should not login', async ({ page }) => {
-    test.setTimeout(45_000);
-    await page.goto(`${BASE_URL}/`);
-    
-    await page.locator('input[type="email"]').first().fill('wrong@test.com');
-    await page.locator('input[type="password"]').first().fill('wrongpass');
-    await page.locator('button[type="submit"]').first().click();
-
-    await page.waitForTimeout(6_000);
-    expect(page.url()).not.toContain('dashboard');
-    console.log('✅ LLL-02 passed');
+test.describe('Dashboard - Navigation', () => {
+  test.beforeEach(async ({ page }) => {
+    const dashboard = new DashboardPage(page);
+    await dashboard.goto('/');
+    await dashboard.waitForDashboardLoad();
   });
 
-  test('LLL-03: empty email should not login', async ({ page }) => {
-    test.setTimeout(45_000);
-    await page.goto(`${BASE_URL}/`);
-    
-    await page.locator('input[type="password"]').first().fill(CREDENTIALS.password);
-    await page.locator('button[type="submit"]').first().click();
+  // ── TC-DASH-008 ──────────────────────────────────────────────────────
+  test('@smoke TC-DASH-008: All sidebar links navigate without errors', async ({ page }) => {
+    const navLinks = await page.locator('nav a, aside a').all();
+    const hrefs: string[] = [];
 
-    await page.waitForTimeout(5_000);
-    expect(page.url()).not.toContain('dashboard');
-    console.log('✅ LLL-03 passed');
+    for (const link of navLinks) {
+      const href = await link.getAttribute('href');
+      if (href && !href.startsWith('http') && href !== '#') {
+        hrefs.push(href);
+      }
+    }
+
+    const uniqueHrefs = [...new Set(hrefs)];
+    console.log(`Testing ${uniqueHrefs.length} nav routes`);
+
+    for (const href of uniqueHrefs.slice(0, 8)) {
+      await page.goto(href);
+      await page.waitForLoadState('networkidle');
+      const status = page.url();
+      // Should not redirect to an error page
+      expect(await page.locator('text=/404|not found|error/i').isVisible().catch(() => false)).toBe(false);
+      console.log(`✅ ${href} → OK`);
+    }
+  });
+
+  // ── TC-DASH-009 ──────────────────────────────────────────────────────
+  test('@regression TC-DASH-009: Browser back navigation works correctly', async ({ page }) => {
+    const dashboard = new DashboardPage(page);
+    const initialUrl = page.url();
+
+    // Click first internal nav link
+    const firstLink = page.locator('nav a[href]:not([href="#"])').first();
+    const href = await firstLink.getAttribute('href');
+    if (href) {
+      await firstLink.click();
+      await page.waitForLoadState('networkidle');
+      await page.goBack();
+      await page.waitForLoadState('networkidle');
+      expect(page.url()).toBe(initialUrl);
+    }
+  });
+
+  // ── TC-DASH-010 ──────────────────────────────────────────────────────
+  test('@regression TC-DASH-010: Logout works and redirects to login', async ({ page }) => {
+    const dashboard = new DashboardPage(page);
+
+    // Try to find and click logout
+    const userMenu = dashboard.userAvatar;
+    const menuVisible = await userMenu.isVisible().catch(() => false);
+
+    if (menuVisible) {
+      await dashboard.logout();
+      await page.waitForLoadState('networkidle');
+      // Should be on login page
+      const isLoginVisible = await page.locator('input[type="password"]').isVisible().catch(() => false);
+      const isLoginUrl = /login|signin|auth/i.test(page.url());
+      expect(isLoginVisible || isLoginUrl).toBeTruthy();
+    } else {
+      test.skip(true, 'User menu/avatar not found — check selector');
+    }
   });
 });

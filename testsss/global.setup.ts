@@ -32,10 +32,10 @@ setup('authenticate and save session', async ({ page }) => {
   // If redirected to login page, fill credentials
   const emailInput = page.locator(emailSelector).first();
   if (await emailInput.isVisible({ timeout: 10_000 }).catch(() => false)) {
-    await emailInput.fill(process.env.TEST_USER_EMAIL || 'test@example.com');
+    await emailInput.fill(process.env.TEST_USER_EMAIL || 'info@foundershub.ai');
 
     const passwordInput = page.locator(passwordSelector).first();
-    await passwordInput.fill(process.env.TEST_USER_PASSWORD || 'TestPassword123!');
+    await passwordInput.fill(process.env.TEST_USER_PASSWORD || 'Invest@92');
 
     // Submit login
     const submitBtn = page.locator([

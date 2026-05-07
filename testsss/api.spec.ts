@@ -31,8 +31,8 @@ test.describe('API - Health & Authentication', () => {
     for (const endpoint of loginEndpoints) {
       const response = await request.post(`${API_BASE}${endpoint}`, {
         data: {
-          email: process.env.TEST_USER_EMAIL || 'test@example.com',
-          password: process.env.TEST_USER_PASSWORD || 'TestPassword123!',
+          email: process.env.TEST_USER_EMAIL || 'info@foundershub.ai',
+          password: process.env.TEST_USER_PASSWORD || 'Invest@92',
         },
       }).catch(() => null);
 

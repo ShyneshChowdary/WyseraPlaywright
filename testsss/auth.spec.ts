@@ -9,8 +9,8 @@ import { LoginPage } from '../pages/LoginPage';
  */
 
 const BASE_URL = process.env.BASE_URL || 'https://app-dev.foundershub.ai';
-const VALID_EMAIL = process.env.TEST_USER_EMAIL || 'test@example.com';
-const VALID_PASSWORD = process.env.TEST_USER_PASSWORD || 'TestPassword123!';
+const VALID_EMAIL = process.env.TEST_USER_EMAIL || 'info@foundershub.ai';
+const VALID_PASSWORD = process.env.TEST_USER_PASSWORD || 'Invest@92';
 
 test.describe('Authentication - Login', () => {
   let loginPage: LoginPage;
