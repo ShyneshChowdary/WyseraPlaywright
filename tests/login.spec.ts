@@ -1,9 +1,28 @@
-import { test, expect } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 
-test('Login test', async ({ page }) => {
-  await page.goto('https://app-dev.foundershub.ai/login');
+export class LoginPage {
+  readonly page: Page;
+  readonly emailInput: Locator;
+  readonly passwordInput: Locator;
+  readonly signInButton: Locator;
+  readonly errorMessage: Locator;
 
-  await page.locator('[placeholder="Enter your email"]').fill('info@foundershub.ai');
-  await page.locator('[placeholder="Enter your password"]').fill('Invest@92');
-  await page.getByRole('button', { name: 'Sign in' }).click();
-});
+  constructor(page: Page) {
+    this.page = page;
+    this.emailInput = page.getByLabel('Email address');
+    this.passwordInput = page.getByLabel('Password');
+    this.signInButton = page.getByRole('button', { name: /sign in/i });
+    this.errorMessage = page.getByText(/invalid|incorrect|error/i).first();
+  }
+
+  async goto() {
+    await this.page.goto('/login');
+    await expect(this.emailInput).toBeVisible();
+  }
+
+  async login(email: string, password: string) {
+    await this.emailInput.fill(email);
+    await this.passwordInput.fill(password);
+    await this.signInButton.click();
+  }
+}
