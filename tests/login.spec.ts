@@ -9,8 +9,8 @@ export class LoginPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.emailInput = page.getByLabel('Email address');
-    this.passwordInput = page.getByLabel('Password');
+    this.emailInput = page.getByLabel('test@wysera.ai');
+    this.passwordInput = page.getByLabel('Invest@92');
     this.signInButton = page.getByRole('button', { name: /sign in/i });
     this.errorMessage = page.getByText(/invalid|incorrect|error/i).first();
   }
