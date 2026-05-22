@@ -1,28 +1,20 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { test } from '@playwright/test';
+import { LoginPage } from '../pages/LoginPage';
+import dotenv from 'dotenv';
+import path from 'path';
 
-export class LoginPage {
-  readonly page: Page;
-  readonly emailInput: Locator;
-  readonly passwordInput: Locator;
-  readonly signInButton: Locator;
-  readonly errorMessage: Locator;
+dotenv.config({ path: path.resolve(__dirname, '../postwyse.env') });
 
-  constructor(page: Page) {
-    this.page = page;
-    this.emailInput = page.getByLabel('test@wysera.ai');
-    this.passwordInput = page.getByLabel('Invest@92');
-    this.signInButton = page.getByRole('button', { name: /sign in/i });
-    this.errorMessage = page.getByText(/invalid|incorrect|error/i).first();
+test('Postwyse - Login Test', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  console.log('🔑 Email from env:', process.env.EMAIL);
+
+  if (!process.env.EMAIL || !process.env.PASSWORD) {
+    throw new Error('❌ Credentials not found in postwyse.env file!');
   }
 
-  async goto() {
-    await this.page.goto('/login');
-    await expect(this.emailInput).toBeVisible();
-  }
-
-  async login(email: string, password: string) {
-    await this.emailInput.fill(email);
-    await this.passwordInput.fill(password);
-    await this.signInButton.click();
-  }
-}
+  // Use full URL instead of relative path
+  await loginPage.goto('https://postwyse.com/login');
+  await loginPage.login(process.env.EMAIL!, process.env.PASSWORD!);
+});
